@@ -195,7 +195,8 @@ void main() {
 
     barrier();
 
-    if (all(lessThan(ivec2(gl_GlobalInvocationID), params.resolution))) {
+    if (all(lessThan(ivec2(gl_GlobalInvocationID), params.resolution)))
+    {
         if (WINDOW_R == 1)
             imageStore(dstImage, ivec2(gl_GlobalInvocationID.xy), tent3x3());
         else if (WINDOW_R == 2)
