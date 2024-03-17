@@ -1,6 +1,6 @@
 #version 450
 
-layout(contant_id = 0) const int WINDOW_R = 1;
+layout(constant_id = 0) const int WINDOW_R = 1;
 
 layout(location = 0) out vec4 color;
 
@@ -25,7 +25,7 @@ void tent3x3()
 
     const vec2 kernel_vec = vec2(params.k) - params.b * vec2(1, 2);
     const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * kernel_sum - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
+        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
 
     vec3 row_0, row_2, row_0_basis, row_2_basis;
     vec3 texel_0, texel_1;
@@ -46,7 +46,7 @@ void tent3x3()
     row_2 = row_2_basis * kernel_vec.y + texel_0 * kernel_vec.x;
     row_2_basis = (row_2_basis + texel_0) * params.b;
 
-    texel_0 = isOdd.y ? row_0 - row_0_basis : row_2 - row_2_basis;
+    texel_0 = isOdd.y ? (row_0 + row_0_basis) : (row_2 + row_2_basis);
     texel_0 += dFdyFine(texel_0) * t.y;
     
     row_0 += texel_0 + row_2;
@@ -61,7 +61,7 @@ void tent5x5()
 
     const vec4 kernel_vec = vec4(params.k) - params.b * vec4(1, 2, 3, 4);
     const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * kernel_sum - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
+        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
 
     vec3 row_0, row_2, row_4, row_0_basis, row_2_basis, row_4_basis;
     vec3 texel_0, texel_1, texel_2;
@@ -96,7 +96,7 @@ void tent5x5()
     row_4 += texel_0 * kernel_vec.z;
     row_4_basis = (row_4_basis + texel_0) * params.b;
     
-    texel_0 = row_2 + row_2_basis + (isOdd.y ? row_0 + row_0_basis : row_4 + row_4_basis);
+    texel_0 = row_2 - row_2_basis + (isOdd.y ? row_0 + row_0_basis : row_4 + row_4_basis);
     texel_0 += dFdyFine(texel_0) * t.y;
     texel_0 += row_0 + row_2 + row_4;
 
@@ -109,9 +109,9 @@ void tent7x7()
     const vec2 t = vec2(isOdd) * -2.0 + 1.0;
 
     const vec4 kernel_vec_first = vec4(params.k) - params.b * vec4(1, 2, 3, 4);
-    const vec2 kernel_vec_second = vec4(params.k) - params.b * vec4(5, 6);
+    const vec2 kernel_vec_second = vec2(params.k) - params.b * vec2(5, 6);
     const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * kernel_sum - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
+        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
 
     vec3 row_0, row_2, row_4, row_6, row_0_basis, row_2_basis, row_4_basis, row_6_basis;
     vec3 texel_0, texel_1, texel_2, texel_3;
@@ -120,56 +120,52 @@ void tent7x7()
     texel_1 = textureLod(colorTex, texCoord + params.offset * vec2(-1, -3), 0).rgb;
     texel_2 = textureLod(colorTex, texCoord + params.offset * vec2( 1, -3), 0).rgb;
     texel_3 = textureLod(colorTex, texCoord + params.offset * vec2( 3, -3), 0).rgb;
-    row_0_basis = texel_0 + texel_1 + texel_2 + texel_3;
-    row_0 = (texel_0 + texel_3) * kernel_vec_second.y + (texel_1 + texel_2) * kernel_vec_first.w;
-    texel_0 = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
-    texel_0 += dFdxFine(texel_0) * t.x;
-    row_0_basis = (row_0_basis + texel_0) * params.b;
-    texel_0 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_second.x;
-    texel_0 += (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.z;
-    row_0 += texel_0 + dFdxFine(texel_0) * t.x;
+    row_0 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_second.x 
+        + (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.z;
+    row_0_basis = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
+    row_0 += dFdxFine(row_0) * t.x;
+    row_0_basis += dFdxFine(row_0_basis) * t.x;
+    row_0 += (texel_0 + texel_3) * kernel_vec_second.y + (texel_1 + texel_2) * kernel_vec_first.w;
+    row_0_basis = (row_0_basis + texel_0 + texel_1 + texel_2 + texel_3) * params.b;
 
     texel_0 = textureLod(colorTex, texCoord + params.offset * vec2(-3, -1), 0).rgb;
     texel_1 = textureLod(colorTex, texCoord + params.offset * vec2(-1, -1), 0).rgb;
     texel_2 = textureLod(colorTex, texCoord + params.offset * vec2( 1, -1), 0).rgb;
     texel_3 = textureLod(colorTex, texCoord + params.offset * vec2( 3, -1), 0).rgb;
-    row_2_basis = texel_0 + texel_1 + texel_2 + texel_3;
-    row_2 = (texel_0 + texel_3) * kernel_vec_first.w + (texel_1 + texel_2) * kernel_vec_first.y;
-    texel_0 = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
-    texel_0 += dFdxFine(texel_0) * t.x;
-    row_2_basis = (row_2_basis + texel_0) * params.b;
-    texel_0 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_first.z;
-    texel_0 += (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.x;
-    row_2 += texel_0 + dFdxFine(texel_0) * t.x;
+    row_2 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_first.z 
+        + (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.x;
+    row_2_basis = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
+    row_2 += dFdxFine(row_2) * t.x;
+    row_2_basis += dFdxFine(row_2_basis) * t.x;
+    row_2 += (texel_0 + texel_3) * kernel_vec_first.w + (texel_1 + texel_2) * kernel_vec_first.y;
+    row_2_basis = (row_2_basis + texel_0 + texel_1 + texel_2 + texel_3) * params.b;
 
     texel_0 = textureLod(colorTex, texCoord + params.offset * vec2(-3, 1), 0).rgb;
     texel_1 = textureLod(colorTex, texCoord + params.offset * vec2(-1, 1), 0).rgb;
     texel_2 = textureLod(colorTex, texCoord + params.offset * vec2( 1, 1), 0).rgb;
     texel_3 = textureLod(colorTex, texCoord + params.offset * vec2( 3, 1), 0).rgb;
-    row_4_basis = texel_0 + texel_1 + texel_2 + texel_3;
-    row_4 = (texel_0 + texel_3) * kernel_vec_first.w + (texel_1 + texel_2) * kernel_vec_first.y;
-    texel_0 = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
-    texel_0 += dFdxFine(texel_0) * t.x;
-    row_4_basis = (row_4_basis + texel_0) * params.b;
-    texel_0 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_first.z;
-    texel_0 += (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.x;
-    row_4 += texel_0 + dFdxFine(texel_0) * t.x;
+    row_4 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_first.z 
+        + (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.x;
+    row_4_basis = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
+    row_4 += dFdxFine(row_4) * t.x;
+    row_4_basis += dFdxFine(row_4_basis) * t.x;
+    row_4 += (texel_0 + texel_3) * kernel_vec_first.w + (texel_1 + texel_2) * kernel_vec_first.y;
+    row_4_basis = (row_4_basis + texel_0 + texel_1 + texel_2 + texel_3) * params.b;
 
     texel_0 = textureLod(colorTex, texCoord + params.offset * vec2(-3, 3), 0).rgb;
     texel_1 = textureLod(colorTex, texCoord + params.offset * vec2(-1, 3), 0).rgb;
     texel_2 = textureLod(colorTex, texCoord + params.offset * vec2( 1, 3), 0).rgb;
     texel_3 = textureLod(colorTex, texCoord + params.offset * vec2( 3, 3), 0).rgb;
-    row_6_basis = texel_0 + texel_1 + texel_2 + texel_3;
-    row_6 = (texel_0 + texel_3) * kernel_vec_second.y + (texel_1 + texel_2) * kernel_vec_first.w;
-    texel_0 = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
-    texel_0 += dFdxFine(texel_0) * t.x;
-    row_6_basis = (row_6_basis + texel_0) * params.b;
-    texel_0 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_second.x;
-    texel_0 += (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.z;
-    row_6 += texel_0 + dFdxFine(texel_0) * t.x;
-    
-    texel_0 = row_2 + row_4 + t.y * (row_2_basis - row_4_basis);
-    texel_0 += isOdd.y ? row_0 - row_0_basis : row_6 - row_6_basis; 
+    row_6 = (isOdd.x ? texel_0 + texel_2 : texel_1 + texel_3) * kernel_vec_second.x 
+        + (isOdd.x ? texel_1 : texel_2) * kernel_vec_first.z;
+    row_6_basis = texel_1 + texel_2 + (isOdd.x ? texel_0 : texel_3);
+    row_6 += dFdxFine(row_6) * t.x;
+    row_6_basis += dFdxFine(row_6_basis) * t.x;
+    row_6 += (texel_0 + texel_3) * kernel_vec_second.y + (texel_1 + texel_2) * kernel_vec_first.w;
+    row_6_basis = (row_6_basis + texel_0 + texel_1 + texel_2 + texel_3) * params.b;
+
+    texel_0 = row_2 + row_4 + t.y * (row_4_basis - row_2_basis);
+    texel_0 += isOdd.y ? row_0 + row_0_basis : row_6 + row_6_basis; 
     texel_0 += dFdyFine(texel_0) * t.y;
     texel_0 += row_0 + row_2 + row_4 + row_6;
 

@@ -1,6 +1,6 @@
 #version 450
 
-layout(contant_id = 0) const int WINDOW_R = 1;
+layout(constant_id = 0) const int WINDOW_R = 1;
 
 layout(location = 0) out vec4 color;
 
@@ -22,7 +22,7 @@ void tent3x3()
 {
     const vec2 kernel_vec = vec2(params.k) - params.b * vec2(1, 2);
     const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * kernel_sum - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
+        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
 
     vec3 sum, tmp_1, tmp_2;
 
@@ -47,7 +47,7 @@ void tent5x5()
 {
     const vec4 kernel_vec = vec4(params.k) - params.b * vec4(1, 2, 3, 4);
     const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * kernel_sum - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
+        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
 
     vec3 sum, tmp_1, tmp_2, tmp_3, tmp_4;
 
@@ -89,9 +89,9 @@ void tent5x5()
 void tent7x7()
 {
     const vec4 kernel_vec_first = vec4(params.k) - params.b * vec4(1, 2, 3, 4);
-    const vec2 kernel_vec_second = vec4(params.k) - params.b * vec4(5, 6);
+    const vec2 kernel_vec_second = vec2(params.k) - params.b * vec2(5, 6);
     const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * kernel_sum - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
+        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
 
     vec3 sum, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6;
 
