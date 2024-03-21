@@ -20,152 +20,6 @@ shared vec3 window[WINDOW_LEN][WINDOW_LEN];
 // kernel_sum = n * (n * k - b * (n * n - 1) / 2)
 // kernel[i, j] = k - b(|x| + |y|)
 
-vec4 tent3x3()
-{
-    const vec2 kernel_vec = vec2(params.k) - params.b * vec2(1, 2);
-    const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
-
-    vec3 sum, tmp_1, tmp_2;
-
-    ivec2 coord = ivec2(gl_LocalInvocationID.xy) + WINDOW_R;
-
-    tmp_2  = window[coord.y - 1][coord.x - 1];
-    tmp_1  = window[coord.y - 1][coord.x];
-    tmp_2 += window[coord.y - 1][coord.x + 1];
-    
-    tmp_1 += window[coord.y][coord.x - 1];
-    sum    = window[coord.y][coord.x];
-    tmp_1 += window[coord.y][coord.x + 1];
-
-    tmp_2 += window[coord.y + 1][coord.x - 1];
-    tmp_1 += window[coord.y + 1][coord.x];
-    tmp_2 += window[coord.y + 1][coord.x + 1];
-
-    sum = sum * params.k + tmp_1 * kernel_vec.x + tmp_2 * kernel_vec.y;
-
-    return vec4(sum / kernel_sum, 1.0);
-}
-
-vec4 tent5x5()
-{
-    const vec4 kernel_vec = vec4(params.k) - params.b * vec4(1, 2, 3, 4);
-    const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
-
-    vec3 sum, tmp_1, tmp_2, tmp_3, tmp_4;
-
-    ivec2 coord = ivec2(gl_LocalInvocationID.xy) + WINDOW_R;
-
-    tmp_4  = window[coord.y - 2][coord.x - 2];
-    tmp_3  = window[coord.y - 2][coord.x - 1];
-    tmp_2  = window[coord.y - 2][coord.x];
-    tmp_3 += window[coord.y - 2][coord.x + 1];
-    tmp_4 += window[coord.y - 2][coord.x + 2];
-
-    tmp_3 += window[coord.y - 1][coord.x - 2];
-    tmp_2 += window[coord.y - 1][coord.x - 1];
-    tmp_1  = window[coord.y - 1][coord.x];
-    tmp_2 += window[coord.y - 1][coord.x + 1];
-    tmp_3 += window[coord.y - 1][coord.x + 2];
-
-    tmp_2 += window[coord.y][coord.x - 2];
-    tmp_1 += window[coord.y][coord.x - 1];
-    sum    = window[coord.y][coord.x];
-    tmp_1 += window[coord.y][coord.x + 1];
-    tmp_2 += window[coord.y][coord.x + 2];
-
-    tmp_3 += window[coord.y + 1][coord.x - 2];
-    tmp_2 += window[coord.y + 1][coord.x - 1];
-    tmp_1 += window[coord.y + 1][coord.x];
-    tmp_2 += window[coord.y + 1][coord.x + 1];
-    tmp_3 += window[coord.y + 1][coord.x + 2];
-
-    tmp_4 += window[coord.y + 2][coord.x - 2];
-    tmp_3 += window[coord.y + 2][coord.x - 1];
-    tmp_2 += window[coord.y + 2][coord.x];
-    tmp_3 += window[coord.y + 2][coord.x + 1];
-    tmp_4 += window[coord.y + 2][coord.x + 2];
-
-    sum = sum * params.k + tmp_1 * kernel_vec.x + tmp_2 * kernel_vec.y + tmp_3 * kernel_vec.z + tmp_4 * kernel_vec.w;
-
-    return vec4(sum / kernel_sum, 1.0);
-}
-
-vec4 tent7x7()
-{
-    const vec4 kernel_vec_first = vec4(params.k) - params.b * vec4(1, 2, 3, 4);
-    const vec2 kernel_vec_second = vec2(params.k) - params.b * vec2(5, 6);
-    const float kernel_sum = (2 * WINDOW_R + 1) *
-        (params.k * (2 * WINDOW_R + 1) - 2 * WINDOW_R * (WINDOW_R + 1) * params.b);
-
-    vec3 sum, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6;
-
-    ivec2 coord = ivec2(gl_LocalInvocationID.xy) + WINDOW_R;
-
-    tmp_6  = window[coord.y - 3][coord.x - 3];
-    tmp_5  = window[coord.y - 3][coord.x - 2];
-    tmp_4  = window[coord.y - 3][coord.x - 1];
-    tmp_3  = window[coord.y - 3][coord.x];
-    tmp_4 += window[coord.y - 3][coord.x + 1];
-    tmp_5 += window[coord.y - 3][coord.x + 2];
-    tmp_6 += window[coord.y - 3][coord.x + 3];
-
-    tmp_5 += window[coord.y - 2][coord.x - 3];
-    tmp_4 += window[coord.y - 2][coord.x - 2];
-    tmp_3 += window[coord.y - 2][coord.x - 1];
-    tmp_2  = window[coord.y - 2][coord.x];
-    tmp_3 += window[coord.y - 2][coord.x + 1];
-    tmp_4 += window[coord.y - 2][coord.x + 2];
-    tmp_5 += window[coord.y - 2][coord.x + 3];
-
-    tmp_4 += window[coord.y - 1][coord.x - 3];
-    tmp_3 += window[coord.y - 1][coord.x - 2];
-    tmp_2 += window[coord.y - 1][coord.x - 1];
-    tmp_1  = window[coord.y - 1][coord.x];
-    tmp_2 += window[coord.y - 1][coord.x + 1];
-    tmp_3 += window[coord.y - 1][coord.x + 2];
-    tmp_4 += window[coord.y - 1][coord.x + 3];
-
-    tmp_3 += window[coord.y][coord.x - 3];
-    tmp_2 += window[coord.y][coord.x - 2];
-    tmp_1 += window[coord.y][coord.x - 1];
-    sum    = window[coord.y][coord.x];
-    tmp_1 += window[coord.y][coord.x + 1];
-    tmp_2 += window[coord.y][coord.x + 2];
-    tmp_3 += window[coord.y][coord.x + 3];
-
-    tmp_4 += window[coord.y + 1][coord.x - 3];
-    tmp_3 += window[coord.y + 1][coord.x - 2];
-    tmp_2 += window[coord.y + 1][coord.x - 1];
-    tmp_1 += window[coord.y + 1][coord.x];
-    tmp_2 += window[coord.y + 1][coord.x + 1];
-    tmp_3 += window[coord.y + 1][coord.x + 2];
-    tmp_4 += window[coord.y + 1][coord.x + 3];
-
-    tmp_5 += window[coord.y + 2][coord.x - 3];
-    tmp_4 += window[coord.y + 2][coord.x - 2];
-    tmp_3 += window[coord.y + 2][coord.x - 1];
-    tmp_2 += window[coord.y + 2][coord.x];
-    tmp_3 += window[coord.y + 2][coord.x + 1];
-    tmp_4 += window[coord.y + 2][coord.x + 2];
-    tmp_5 += window[coord.y + 2][coord.x + 3];
-
-    tmp_6 += window[coord.y + 3][coord.x - 3];
-    tmp_5 += window[coord.y + 3][coord.x - 2];
-    tmp_4 += window[coord.y + 3][coord.x - 1];
-    tmp_3 += window[coord.y + 3][coord.x];
-    tmp_4 += window[coord.y + 3][coord.x + 1];
-    tmp_5 += window[coord.y + 3][coord.x + 2];
-    tmp_6 += window[coord.y + 3][coord.x + 3];
-
-    sum = sum * params.k + tmp_1 * kernel_vec_first.x + tmp_2 * kernel_vec_first.y
-        + tmp_3 * kernel_vec_first.z + tmp_4 * kernel_vec_first.w
-        + tmp_5 * kernel_vec_second.x + tmp_6 * kernel_vec_second.y;
-
-    return vec4(sum / kernel_sum, 1.0);
-}
-
 void main() {
     int row = int(gl_LocalInvocationIndex / WINDOW_LEN);
     int col = int(gl_LocalInvocationIndex % WINDOW_LEN);
@@ -181,27 +35,24 @@ void main() {
         window[row][col] = textureLod(srcImage, (coord + 0.5) / params.resolution, 0).rgb;
     }
 
-    if (WORK_GROUP_AXIS_SIZE == 8)
-    {
-        idx += WORK_GROUP_AXIS_SIZE * WORK_GROUP_AXIS_SIZE;
-        if (idx < WINDOW_LEN * WINDOW_LEN)
-        {
-            row = idx / WINDOW_LEN;
-            col = idx % WINDOW_LEN;
-            coord = ivec2(gl_WorkGroupID.xy) * WORK_GROUP_AXIS_SIZE + ivec2(col - WINDOW_R, row - WINDOW_R);
-            window[row][col] = textureLod(srcImage, (coord + 0.5) / params.resolution, 0).rgb;
-        }
-    }
-
     barrier();
 
-    if (all(lessThan(ivec2(gl_GlobalInvocationID), params.resolution)))
+    if (all(lessThan(ivec2(gl_GlobalInvocationID.xy), params.resolution)))
     {
-        if (WINDOW_R == 1)
-            imageStore(dstImage, ivec2(gl_GlobalInvocationID.xy), tent3x3());
-        else if (WINDOW_R == 2)
-            imageStore(dstImage, ivec2(gl_GlobalInvocationID.xy), tent5x5());
-        else if (WINDOW_R == 3)
-            imageStore(dstImage, ivec2(gl_GlobalInvocationID.xy), tent7x7());
+        vec3 result = vec3(0);
+        float kernel_sum = 0;
+        ivec2 coord = ivec2(gl_LocalInvocationID.xy) + WINDOW_R;
+
+        for (int i = -WINDOW_R; i <= WINDOW_R; ++i)
+        {
+            for (int j = -WINDOW_R; j <= WINDOW_R; ++j)
+            {
+                float tmp = params.k - params.b * (abs(i) + abs(j));
+                result += tmp * window[coord.y + i][coord.x + j];
+                kernel_sum += tmp;
+            }
+        }
+
+        imageStore(dstImage, ivec2(gl_GlobalInvocationID.xy), vec4(result / kernel_sum, 1.0));
     }
 }
